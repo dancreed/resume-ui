@@ -13,13 +13,30 @@ const theme = {
 const PROFILE_URL = "https://resume-worker.dan-creed.workers.dev/profile.jpg";
 const GOON_URL = "https://images.credly.com/images/9a698c36-3b13-48b4-a3bf-8a070d5000a6/image.png";
 
+function speak(text) {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    const utter = new window.SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    utter.pitch = 1.06;
+    utter.lang = "en-US";
+    window.speechSynthesis.speak(utter);
+  }
+}
+
 export default function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [voiceActive, setVoiceActive] = useState(false);
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
 
   useEffect(() => {
     if (voiceActive && !listening && transcript && transcript.trim()) {
@@ -29,6 +46,11 @@ export default function App() {
     }
     // eslint-disable-next-line
   }, [listening]);
+
+  // Speak each answer out loud as it's set
+  useEffect(() => {
+    if (answer) speak(answer);
+  }, [answer]);
 
   const handleStartVoice = () => {
     setVoiceActive(true);
@@ -103,7 +125,12 @@ export default function App() {
       alignItems: "center"
     }}>
       {/* Profile and Badge Row */}
-      <div style={{ display: "flex", alignItems: "center", gap: "2em", marginBottom: "1em" }}>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "2em",
+        marginBottom: "1em"
+      }}>
         <img
           src={PROFILE_URL}
           alt="Daniel Creed Profile"
@@ -123,7 +150,8 @@ export default function App() {
             fontSize: "2em",
             marginBlock: 0,
           }}>
-            Daniel Creed Resume Q&amp;A
+            {/* Updated Heading */}
+            Daniel Creed Q&amp;A ChatBot
           </h2>
         </div>
         <img
@@ -249,4 +277,3 @@ export default function App() {
     </div>
   );
 }
-
