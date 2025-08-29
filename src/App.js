@@ -13,16 +13,39 @@ const theme = {
 const PROFILE_URL = "https://resume-worker.dan-creed.workers.dev/profile.jpg";
 const GOON_URL = "https://images.credly.com/images/9a698c36-3b13-48b4-a3bf-8a070d5000a6/image.png";
 
-// Text-to-speech using browser's Web Speech API
+// Text-to-speech using browser's Web Speech API, prefers smooth female voice
 function speak(text) {
-  if (window.speechSynthesis) {
-    window.speechSynthesis.cancel();
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  function selectVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    return (
+      // Prefer English female or natural-sounding voices by name
+      voices.find(v => v.lang.startsWith("en") && v.name.toLowerCase().includes("female")) ||
+      voices.find(v => v.lang.startsWith("en") &&
+        (
+          v.name.includes("Google") ||
+          v.name.includes("Microsoft") ||
+          v.name.includes("Samantha")
+        ) &&
+        v.name.toLowerCase().includes("english")
+      ) ||
+      voices.find(v => v.lang.startsWith("en") && v.gender === "female") ||
+      voices.find(v => v.lang.startsWith("en"))
+    );
+  }
+
+  // Sometimes voices don't load immediately, so wait briefly
+  setTimeout(() => {
+    const voice = selectVoice();
     const utter = new window.SpeechSynthesisUtterance(text);
+    if (voice) utter.voice = voice;
     utter.rate = 1;
-    utter.pitch = 1.06;
+    utter.pitch = 1.08;
     utter.lang = "en-US";
     window.speechSynthesis.speak(utter);
-  }
+  }, 100);
 }
 
 export default function App() {
@@ -39,7 +62,7 @@ export default function App() {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
-  // Automatic asking for voice input (personal assistant mode)
+  // Automatically send Q&A when voice input is done
   useEffect(() => {
     if (voiceActive && !listening && transcript && transcript.trim()) {
       sendVoiceQuestion(transcript);
@@ -49,7 +72,7 @@ export default function App() {
     // eslint-disable-next-line
   }, [listening]);
 
-  // Play back answer using TTS
+  // Play answer out loud each time it updates
   useEffect(() => {
     if (answer) speak(answer);
   }, [answer]);
@@ -79,7 +102,7 @@ export default function App() {
       const result = await res.text();
       setAnswer(result || "No answer returned.");
     } catch (err) {
-      setError("Sorry, something went wrong. " + (err.message || err));
+      setError("Sorry, something went wrong. " + ((err && err.message) || err));
     } finally {
       setLoading(false);
       if (voiceActive) {
@@ -106,7 +129,7 @@ export default function App() {
       const result = await res.text();
       setAnswer(result || "No answer returned.");
     } catch (err) {
-      setError("Sorry, something went wrong. " + (err.message || err));
+      setError("Sorry, something went wrong. " + ((err && err.message) || err));
     } finally {
       setLoading(false);
     }
