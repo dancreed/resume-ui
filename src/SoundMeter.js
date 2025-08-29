@@ -4,6 +4,7 @@ export default function SoundMeter({ listening }) {
   const canvasRef = useRef();
 
   useEffect(() => {
+    if (!listening) return;
     let audioContext;
     let analyser;
     let dataArray;
@@ -13,12 +14,11 @@ export default function SoundMeter({ listening }) {
 
     async function setup() {
       try {
-        if (!listening) return;
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         source = audioContext.createMediaStreamSource(stream);
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 1024;  // More resolution for wave effect
         dataArray = new Uint8Array(analyser.frequencyBinCount);
 
         source.connect(analyser);
@@ -28,27 +28,24 @@ export default function SoundMeter({ listening }) {
           const canvas = canvasRef.current;
           const ctx = canvas.getContext("2d");
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.strokeStyle = "#ff7000";
-          ctx.lineWidth = 7;
+          // Wave style
           ctx.beginPath();
-
-          let maxAmplitude = 0;
+          ctx.strokeStyle = "#ff7000";
+          ctx.lineWidth = 4;
+          const sliceWidth = canvas.width / dataArray.length;
+          let x = 0;
           for (let i = 0; i < dataArray.length; i++) {
-            maxAmplitude = Math.max(maxAmplitude, Math.abs(dataArray[i] - 128));
+            let v = dataArray[i] / 128.0;
+            let y = (v * canvas.height) / 2;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            x += sliceWidth;
           }
-          // Orange bar for amplitude
-          const barLength = (maxAmplitude / 128) * canvas.width;
-
-          ctx.moveTo(4, canvas.height / 2);
-          ctx.lineTo(barLength, canvas.height / 2);
-
           ctx.stroke();
           animationId = requestAnimationFrame(draw);
         }
         draw();
-      } catch {
-        /* fail silently if denied */
-      }
+      } catch (error) {}
     }
 
     setup();
@@ -63,14 +60,14 @@ export default function SoundMeter({ listening }) {
   return (
     <canvas
       ref={canvasRef}
-      width={180}
-      height={24}
+      width={240}
+      height={48}
       style={{
         background: "#fff",
         border: "2px solid #ffb066",
-        borderRadius: "10px",
-        margin: "0.6em auto 0 auto",
-        display: "block"
+        borderRadius: "12px",
+        margin: "1em auto 1em auto",
+        display: listening ? "block" : "none"
       }}
       aria-label="Microphone level"
     />
