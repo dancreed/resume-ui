@@ -4,17 +4,19 @@ export default function SoundMeter({ listening }) {
   const canvasRef = useRef();
 
   useEffect(() => {
-    let audioContext, analyser, source, animationId, stream, dataArray;
+    let audioContext, analyser, animationId, stream, dataArray;
 
     async function setup() {
       if (!listening) return;
       try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        source = audioContext.createMediaStreamSource(stream);
+        const input = audioContext.createMediaStreamSource(stream);
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 1024;
         dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        input.connect(analyser);
 
         function draw() {
           analyser.getByteTimeDomainData(dataArray);
