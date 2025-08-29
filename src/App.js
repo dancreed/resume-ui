@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-
+const theme = {
+  orange: "#ff7000",
+  white: "#fff",
+  gray: "#f9f9fc",
+  inputBorder: "#ffb066",
+  buttonHover: "#ffa540"
+};
 export default function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -81,3 +87,4 @@ export default function App() {
     </div>
   );
 }
+
