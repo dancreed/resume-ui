@@ -13,6 +13,7 @@ const theme = {
 const PROFILE_URL = "https://resume-worker.dan-creed.workers.dev/profile.jpg";
 const GOON_URL = "https://images.credly.com/images/9a698c36-3b13-48b4-a3bf-8a070d5000a6/image.png";
 
+// Text-to-speech using browser's Web Speech API
 function speak(text) {
   if (window.speechSynthesis) {
     window.speechSynthesis.cancel();
@@ -30,6 +31,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [voiceActive, setVoiceActive] = useState(false);
+
   const {
     transcript,
     listening,
@@ -37,6 +39,7 @@ export default function App() {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
+  // Automatic asking for voice input (personal assistant mode)
   useEffect(() => {
     if (voiceActive && !listening && transcript && transcript.trim()) {
       sendVoiceQuestion(transcript);
@@ -46,6 +49,7 @@ export default function App() {
     // eslint-disable-next-line
   }, [listening]);
 
+  // Play back answer using TTS
   useEffect(() => {
     if (answer) speak(answer);
   }, [answer]);
