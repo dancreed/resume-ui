@@ -7,7 +7,7 @@ export default function App() {
   const [error, setError] = useState("");
 
   const handleAsk = async (e) => {
-    e.preventDefault(); // Prevents page reload!
+    e.preventDefault();
     setAnswer("");
     setError("");
     setLoading(true);
@@ -19,9 +19,9 @@ export default function App() {
         body: JSON.stringify({ question }),
       });
       if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      // FIX: set only the answer STRING
-      setAnswer(typeof data.answer === "string" ? data.answer : JSON.stringify(data.answer));
+      // Read answer as simple text (no JSON parsing)
+      const result = await res.text();
+      setAnswer(result || "No answer returned.");
     } catch (err) {
       setError("Sorry, something went wrong. " + (err.message || err));
     } finally {
