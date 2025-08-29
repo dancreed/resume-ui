@@ -13,39 +13,39 @@ const theme = {
 const PROFILE_URL = "https://resume-worker.dan-creed.workers.dev/profile.jpg";
 const GOON_URL = "https://images.credly.com/images/9a698c36-3b13-48b4-a3bf-8a070d5000a6/image.png";
 
-// Text-to-speech using browser's Web Speech API, prefers smooth female voice
+// Enhanced TTS with preferred female voices
+function getPreferredVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = [
+    "Google US English",
+    "Microsoft Aria Online (Natural) - English (United States)",
+    "Microsoft Zira Desktop - English (United States)",
+    "Samantha"
+  ];
+  return voices.find(v => preferred.includes(v.name))
+    || voices.find(v => v.lang.startsWith("en") && v.gender === "female")
+    || voices.find(v => v.lang.startsWith("en"));
+}
+
 function speak(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
 
-  function selectVoice() {
-    const voices = window.speechSynthesis.getVoices();
-    return (
-      // Prefer English female or natural-sounding voices by name
-      voices.find(v => v.lang.startsWith("en") && v.name.toLowerCase().includes("female")) ||
-      voices.find(v => v.lang.startsWith("en") &&
-        (
-          v.name.includes("Google") ||
-          v.name.includes("Microsoft") ||
-          v.name.includes("Samantha")
-        ) &&
-        v.name.toLowerCase().includes("english")
-      ) ||
-      voices.find(v => v.lang.startsWith("en") && v.gender === "female") ||
-      voices.find(v => v.lang.startsWith("en"))
-    );
-  }
-
-  // Sometimes voices don't load immediately, so wait briefly
-  setTimeout(() => {
-    const voice = selectVoice();
+  // Ensure voices are loaded
+  const callTTS = () => {
+    const voice = getPreferredVoice();
     const utter = new window.SpeechSynthesisUtterance(text);
     if (voice) utter.voice = voice;
     utter.rate = 1;
-    utter.pitch = 1.08;
+    utter.pitch = 1.06;
     utter.lang = "en-US";
     window.speechSynthesis.speak(utter);
-  }, 100);
+  };
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = callTTS;
+  } else {
+    callTTS();
+  }
 }
 
 export default function App() {
@@ -62,7 +62,6 @@ export default function App() {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
-  // Automatically send Q&A when voice input is done
   useEffect(() => {
     if (voiceActive && !listening && transcript && transcript.trim()) {
       sendVoiceQuestion(transcript);
@@ -72,7 +71,6 @@ export default function App() {
     // eslint-disable-next-line
   }, [listening]);
 
-  // Play answer out loud each time it updates
   useEffect(() => {
     if (answer) speak(answer);
   }, [answer]);
@@ -149,7 +147,6 @@ export default function App() {
       flexDirection: "column",
       alignItems: "center"
     }}>
-      {/* Profile and Badge Row */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -190,7 +187,6 @@ export default function App() {
           }}
         />
       </div>
-      {/* --- Input and Voice --- */}
       <form onSubmit={handleAsk} style={{
         margin: "2em 0 1.5em 0",
         width: "100%",
