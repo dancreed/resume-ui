@@ -1,7 +1,7 @@
 export async function onRequestPost(context) {
   const reqBody = await context.request.json();
 
-  // Proxy to your Worker endpoint:
+  // Use your actual Worker endpoint:
   const WORKER_URL = "https://resume-worker.dan-creed.workers.dev/ask";
 
   const workerRes = await fetch(WORKER_URL, {
@@ -10,12 +10,12 @@ export async function onRequestPost(context) {
     body: JSON.stringify(reqBody)
   });
 
-  // Forward back the response
+  // Forward the plain text response as-is
   return new Response(
-    await workerRes.body,
+    await workerRes.text(),
     {
       status: workerRes.status,
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "text/plain" }
     }
   );
 }
