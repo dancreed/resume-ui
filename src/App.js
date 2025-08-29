@@ -7,10 +7,11 @@ export default function App() {
   const [error, setError] = useState("");
 
   const handleAsk = async (e) => {
-    e.preventDefault(); // Prevents reload!
+    e.preventDefault(); // Prevents page reload!
     setAnswer("");
     setError("");
     setLoading(true);
+
     try {
       const res = await fetch("/ask", {
         method: "POST",
@@ -19,7 +20,8 @@ export default function App() {
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      setAnswer(data.answer || "(No answer returned)");
+      // FIX: set only the answer STRING
+      setAnswer(typeof data.answer === "string" ? data.answer : JSON.stringify(data.answer));
     } catch (err) {
       setError("Sorry, something went wrong. " + (err.message || err));
     } finally {
