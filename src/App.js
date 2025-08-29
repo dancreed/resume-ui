@@ -3,37 +3,79 @@ import React, { useState } from "react";
 function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  async function askQuestion() {
-    setAnswer(""); // clear previous
-    const res = await fetch("/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
-    });
-    const data = await res.json();
-    setAnswer(data.answer);
-  }
+  const handleAsk = async (e) => {
+    e.preventDefault();
+    setAnswer("");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      if (!res.ok) {
+        throw new Error("Server error: " + res.statusText);
+      }
+      const data = await res.json();
+      setAnswer(data.answer || "(No answer returned)");
+    } catch (err) {
+      setError("Sorry, something went wrong. " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{ maxWidth: 550, margin: "0 auto", padding: "2em" }}>
-      <h2>Ask a Question About Your Resume</h2>
-      <input
-        type="text"
-        value={question}
-        onChange={e => setQuestion(e.target.value)}
-        placeholder="Type a question"
-        style={{ width: "100%" }}
-      />
-      <br />
-      <button onClick={askQuestion}>Ask</button>
+    <main style={{ maxWidth: 650, margin: "3em auto", textAlign: "center", fontFamily: "sans-serif" }}>
+      <h2>Daniel Creed Q&amp;A</h2>
+      <p>
+        <strong>Ask any question about Daniel Creed’s background.<br/></strong>
+        <span style={{ color: "#888" }}>Powered by Cloudflare Workers AI</span>
+      </p>
+      <form style={{ margin: "2em 0" }} onSubmit={handleAsk}>
+        <input
+          required
+          aria-label="E.g. What are his top three skills?"
+          placeholder="E.g. What are his top three skills?"
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
+          style={{
+            width: "65%", padding: "0.75em", fontSize: "1.1em",
+            border: "1px solid #ccc", borderRadius: 4
+          }}
+        />
+        <button 
+          type="submit"
+          style={{
+            marginLeft: "1em", padding: "0.8em 1.2em", fontSize: "1em",
+            background: "#0052cc", color: "white", border: "none", borderRadius: "4px"
+          }}
+          disabled={loading}
+        >
+          {loading ? "Thinking..." : "Ask"}
+        </button>
+      </form>
+      {error && <div style={{ color: "crimson", marginBottom: "1em" }}>{error}</div>}
       {answer && (
-        <div>
-          <h3>AI Answer:</h3>
-          <pre>{answer}</pre>
+        <div style={{
+          background: "#f8f8ff",
+          fontSize: "1.1em",
+          padding: "1.3em",
+          borderRadius: 8,
+          border: "1px solid #eaeaea",
+          margin: "1.5em auto",
+          maxWidth: "90%",
+        }}>
+          <b>Answer:</b>
+          <div style={{ marginTop: "0.7em", whiteSpace: "pre-wrap" }}>{answer}</div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
