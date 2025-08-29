@@ -7,7 +7,7 @@ function App() {
   const [error, setError] = useState("");
 
   const handleAsk = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents page reload!
     setAnswer("");
     setError("");
     setLoading(true);
@@ -19,7 +19,8 @@ function App() {
         body: JSON.stringify({ question }),
       });
       if (!res.ok) {
-        throw new Error("Server error: " + res.statusText);
+        const errTxt = await res.text();
+        throw new Error("Server error: " + errTxt);
       }
       const data = await res.json();
       setAnswer(data.answer || "(No answer returned)");
@@ -32,16 +33,11 @@ function App() {
 
   return (
     <main style={{ maxWidth: 650, margin: "3em auto", textAlign: "center", fontFamily: "sans-serif" }}>
-      <h2>Daniel Creed Q&amp;A</h2>
-      <p>
-        <strong>Ask any question about Daniel Creed’s background.<br/></strong>
-        <span style={{ color: "#888" }}>Powered by Cloudflare Workers AI</span>
-      </p>
-      <form style={{ margin: "2em 0" }} onSubmit={handleAsk}>
+      <h2>Daniel Creed Resume Q&amp;A</h2>
+      <form onSubmit={handleAsk} style={{ margin: "2em 0" }}>
         <input
           required
-          aria-label="E.g. What are his top three skills?"
-          placeholder="E.g. What are his top three skills?"
+          placeholder="Ask about Daniel Creed..."
           value={question}
           onChange={e => setQuestion(e.target.value)}
           style={{
@@ -49,7 +45,7 @@ function App() {
             border: "1px solid #ccc", borderRadius: 4
           }}
         />
-        <button 
+        <button
           type="submit"
           style={{
             marginLeft: "1em", padding: "0.8em 1.2em", fontSize: "1em",
@@ -60,7 +56,11 @@ function App() {
           {loading ? "Thinking..." : "Ask"}
         </button>
       </form>
-      {error && <div style={{ color: "crimson", marginBottom: "1em" }}>{error}</div>}
+      {error && (
+        <div style={{ color: "crimson", marginBottom: "1em", fontWeight: "bold" }}>
+          {error}
+        </div>
+      )}
       {answer && (
         <div style={{
           background: "#f8f8ff",
@@ -70,6 +70,7 @@ function App() {
           border: "1px solid #eaeaea",
           margin: "1.5em auto",
           maxWidth: "90%",
+          minHeight: "3em",
         }}>
           <b>Answer:</b>
           <div style={{ marginTop: "0.7em", whiteSpace: "pre-wrap" }}>{answer}</div>
