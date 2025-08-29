@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-const WS_URL = "wss://worker.dan-creed.workers.dev/websocket";  // <-- Replace with your real endpoint
+const WS_URL = "wss://worker.dan-creed.workers.dev/websocket";  // <-- Replace if needed
 
 export default function App() {
   const [question, setQuestion] = useState("");
@@ -10,8 +10,9 @@ export default function App() {
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
   const mediaRecorderRef = useRef(null);
+  const micStreamRef = useRef(null);
 
-  // Q&A via text POST as before
+  // Text Q&A
   async function handleAsk(e) {
     e.preventDefault();
     setAnswer("");
@@ -33,14 +34,14 @@ export default function App() {
     }
   }
 
-  // VOICE CHAT LOGIC
+  // VOICE - CONNECT
   function connectVoiceWS() {
     wsRef.current = new window.WebSocket(WS_URL);
     wsRef.current.onopen = () => setWsConnected(true);
     wsRef.current.onmessage = async (evt) => {
       const msg = JSON.parse(evt.data);
       if (msg.type === "text") {
-        setAnswer(msg.text); // Display in output box
+        setAnswer(msg.text); // Show in output box
       } else if (msg.type === "audio") {
         playBase64Audio(msg.audio);
       }
@@ -48,6 +49,7 @@ export default function App() {
     wsRef.current.onclose = () => setWsConnected(false);
   }
 
+  // Play backend base64 audio
   function playBase64Audio(b64) {
     const audioBlob = new window.Blob(
       [Uint8Array.from(window.atob(b64), c => c.charCodeAt(0))],
@@ -58,6 +60,7 @@ export default function App() {
     audio.play();
   }
 
+  // VOICE - START
   async function startVoiceRecording() {
     if (!wsConnected || !wsRef.current) return;
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -65,6 +68,7 @@ export default function App() {
       return;
     }
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    micStreamRef.current = stream;
     const recorder = new window.MediaRecorder(stream, { mimeType: "audio/webm" });
     mediaRecorderRef.current = recorder;
     recorder.ondataavailable = async (e) => {
@@ -76,9 +80,16 @@ export default function App() {
     recorder.start(500);
   }
 
+  // VOICE - STOP (stop recorder + stop ALL mic tracks)
   function stopVoiceRecording() {
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
   }
 
   return (
