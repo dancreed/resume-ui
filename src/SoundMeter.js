@@ -24,7 +24,7 @@ export default function SoundMeter({ listening }) {
           const ctx = canvas.getContext("2d");
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-          // Waveform styling
+          // Orange waveform
           ctx.beginPath();
           ctx.lineWidth = 3;
           ctx.strokeStyle = "#ff7000";
@@ -39,12 +39,26 @@ export default function SoundMeter({ listening }) {
           }
           ctx.stroke();
 
+          // Softer shadow effect below (for visual flair)
+          ctx.globalAlpha = 0.3;
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.strokeStyle = "#ffb066";
+          x = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            const v = dataArray[i] / 128.0;
+            const y = canvas.height / 2 + ((v * canvas.height) / 2) * 0.6;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            x += sliceWidth;
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
           animationId = requestAnimationFrame(draw);
         }
         draw();
-      } catch {
-        // fail silently if audio blocked
-      }
+      } catch {}
     }
 
     setup();
