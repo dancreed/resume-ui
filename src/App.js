@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import SoundMeter from "./SoundMeter";
 
 const theme = {
   orange: "#ff7000",
@@ -14,26 +15,39 @@ export default function App() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+  const [voiceActive, setVoiceActive] = useState(false);
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
-  // Submit from typed input or from voice transcript
-  async function handleAsk(e) {
-    e.preventDefault();
+  // Personal assistant mode: auto-ask & answer
+  useEffect(() => {
+    if (voiceActive && !listening && transcript && transcript.trim()) {
+      sendVoiceQuestion(transcript);
+      resetTranscript();
+      setQuestion("");
+    }
+    // eslint-disable-next-line
+  }, [listening]);
+
+  const handleStartVoice = () => {
+    setVoiceActive(true);
+    resetTranscript();
+    SpeechRecognition.startListening({ continuous: false, language: "en-US" });
+  };
+
+  const handleStopVoice = () => {
+    setVoiceActive(false);
+    SpeechRecognition.stopListening();
+  };
+
+  async function sendVoiceQuestion(speechText) {
     setAnswer("");
     setError("");
     setLoading(true);
-    const query = question.trim() || transcript.trim();
-
     try {
       const res = await fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: query }),
+        body: JSON.stringify({ question: speechText }),
       });
       if (!res.ok) throw new Error(await res.text());
       const result = await res.text();
@@ -42,44 +56,64 @@ export default function App() {
       setError("Sorry, something went wrong. " + (err.message || err));
     } finally {
       setLoading(false);
-      resetTranscript();
+      // Auto-continue listening if in "assistant" mode
+      if (voiceActive) {
+        setTimeout(() => {
+          resetTranscript();
+          SpeechRecognition.startListening({ continuous: false, language: "en-US" });
+        }, 500);
+      }
     }
   }
 
-  // When using voice, submit automatically at stop
-  React.useEffect(() => {
-    if (!listening && transcript && transcript.trim()) {
-      setQuestion(transcript);
+  const handleAsk = async (e) => {
+    e.preventDefault();
+    setAnswer("");
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const result = await res.text();
+      setAnswer(result || "No answer returned.");
+    } catch (err) {
+      setError("Sorry, something went wrong. " + (err.message || err));
+    } finally {
+      setLoading(false);
     }
-  }, [listening, transcript]);
+  };
 
   return (
     <div style={{
-      maxWidth: 600,
+      maxWidth: 630,
       margin: "3em auto",
       fontFamily: "sans-serif",
       background: theme.white,
-      borderRadius: 12,
-      boxShadow: "0 6px 24px rgba(255,112,0,0.09)",
-      padding: "2em 2em 2em 2em",
-      border: `1px solid ${theme.orange}`,
+      borderRadius: 14,
+      boxShadow: "0 6px 24px rgba(255,112,0,0.08)",
+      padding: "2.3em 1.5em",
+      border: `2.5px solid ${theme.orange}`,
     }}>
       <h2 style={{
         color: theme.orange,
         fontWeight: "900",
-        fontSize: "2.1em",
+        fontSize: "2.2em",
         marginBottom: "0.5em",
       }}>
         Daniel Creed Resume Q&amp;A
       </h2>
-      <form onSubmit={handleAsk} style={{ margin: "2em 0" }}>
+      <form onSubmit={handleAsk} style={{ margin: "2em 0 1em 0" }}>
         <input
           required
           value={question}
           onChange={e => setQuestion(e.target.value)}
-          placeholder="Ask Daniel Creed a question..."
+          placeholder="Ask a question…"
           style={{
-            width: "65%",
+            width: "63%",
             padding: "0.9em",
             fontSize: "1.1em",
             border: `2.5px solid ${theme.inputBorder}`,
@@ -87,10 +121,11 @@ export default function App() {
             marginRight: "1em",
             background: theme.white,
           }}
+          disabled={loading || voiceActive}
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || voiceActive}
           style={{
             padding: "0.9em 1.5em",
             fontSize: "1.1em",
@@ -100,7 +135,8 @@ export default function App() {
             border: "none",
             borderRadius: 6,
             transition: "background 0.2s",
-            cursor: loading ? "default" : "pointer"
+            cursor: loading ? "default" : "pointer",
+            opacity: voiceActive ? 0.5 : 1,
           }}
         >
           {loading ? "Thinking..." : "Ask"}
@@ -108,43 +144,54 @@ export default function App() {
       </form>
       {browserSupportsSpeechRecognition && (
         <div style={{ marginBottom: "1em" }}>
-          <button
-            type="button"
-            style={{
-              background: listening ? theme.buttonHover : theme.orange,
-              color: theme.white,
-              fontWeight: "bold",
-              border: "none",
-              borderRadius: 6,
-              padding: "0.75em 1.1em",
-              marginRight: "0.5em",
-              cursor: "pointer"
-            }}
-            onClick={() => {
-              resetTranscript();
-              SpeechRecognition.startListening({ continuous: false });
-            }}
-            disabled={loading}
-          >
-            🎤 {listening ? "Listening..." : "Use Voice"}
-          </button>
-          {transcript && !listening && (
+          {!voiceActive ? (
             <button
               type="button"
-              onClick={handleAsk}
               style={{
                 background: theme.orange,
                 color: theme.white,
+                fontWeight: "bold",
                 border: "none",
-                borderRadius: "6px",
-                padding: "0.6em 1.1em",
-                marginLeft: "0.5em",
-                cursor: loading ? "default" : "pointer"
+                borderRadius: 8,
+                padding: "0.95em 1.6em",
+                fontSize: "1.08em",
+                margin: "0.2em auto",
+                cursor: "pointer",
+                boxShadow: listening ? `0 0 14px 2px ${theme.orange}` : undefined,
+                transition: "box-shadow 0.2s",
+              }}
+              onClick={handleStartVoice}
+              disabled={loading}
+            >
+              🎤 Start Conversation
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStopVoice}
+              style={{
+                background: theme.orange,
+                color: theme.white,
+                fontWeight: "bold",
+                border: "none",
+                borderRadius: 8,
+                padding: "0.95em 1.6em",
+                fontSize: "1.08em",
+                margin: "0.2em auto",
+                cursor: "pointer",
+                boxShadow: "0 0 14px 2px #ffa540",
+                transition: "box-shadow 0.2s",
               }}
               disabled={loading}
             >
-              Ask with Voice
+              ⏹ Stop Conversation
             </button>
+          )}
+          {voiceActive && <SoundMeter listening={listening} />}
+          {voiceActive && (
+            <div style={{ color: theme.orange, marginTop: "0.5em", fontWeight: 700 }}>
+              {listening ? "Listening…" : transcript ? "Recognized: " + transcript : ""}
+            </div>
           )}
         </div>
       )}
@@ -167,7 +214,7 @@ export default function App() {
           fontSize: "1.15em",
           color: "#333",
           borderRadius: 12,
-          border: `2px solid ${theme.inputBorder}`,
+          border: `2.5px solid ${theme.inputBorder}`,
         }}
       />
     </div>
