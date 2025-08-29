@@ -47,7 +47,7 @@ export default function SoundMeter({ listening }) {
         }
         draw();
       } catch {
-        /* fail silently on forbidden */
+        /* fail silently if denied */
       }
     }
 
