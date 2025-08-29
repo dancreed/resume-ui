@@ -3,11 +3,11 @@ import React, { useState } from "react";
 function App() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleAsk = async (e) => {
-    e.preventDefault(); // Prevents page reload!
+  async function handleAsk(e) {
+    e.preventDefault();
     setAnswer("");
     setError("");
     setLoading(true);
@@ -18,18 +18,15 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
       });
-      if (!res.ok) {
-        const errTxt = await res.text();
-        throw new Error("Server error: " + errTxt);
-      }
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setAnswer(data.answer || "(No answer returned)");
     } catch (err) {
-      setError("Sorry, something went wrong. " + err.message);
+      setError("Sorry, something went wrong. " + (err.message || err));
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <main style={{ maxWidth: 650, margin: "3em auto", textAlign: "center", fontFamily: "sans-serif" }}>
@@ -37,7 +34,7 @@ function App() {
       <form onSubmit={handleAsk} style={{ margin: "2em 0" }}>
         <input
           required
-          placeholder="Ask about Daniel Creed..."
+          placeholder="Ask a question about Daniel Creed..."
           value={question}
           onChange={e => setQuestion(e.target.value)}
           style={{
@@ -56,11 +53,7 @@ function App() {
           {loading ? "Thinking..." : "Ask"}
         </button>
       </form>
-      {error && (
-        <div style={{ color: "crimson", marginBottom: "1em", fontWeight: "bold" }}>
-          {error}
-        </div>
-      )}
+      {error && <div style={{ color: "crimson", marginBottom: "1em" }}>{error}</div>}
       {answer && (
         <div style={{
           background: "#f8f8ff",
@@ -70,7 +63,6 @@ function App() {
           border: "1px solid #eaeaea",
           margin: "1.5em auto",
           maxWidth: "90%",
-          minHeight: "3em",
         }}>
           <b>Answer:</b>
           <div style={{ marginTop: "0.7em", whiteSpace: "pre-wrap" }}>{answer}</div>
