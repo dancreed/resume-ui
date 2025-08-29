@@ -19,7 +19,7 @@ export default function App() {
         body: JSON.stringify({ question }),
       });
       if (!res.ok) throw new Error(await res.text());
-      // Read answer as simple text (no JSON parsing)
+      // Read plain text response (not JSON!)
       const result = await res.text();
       setAnswer(result || "No answer returned.");
     } catch (err) {
