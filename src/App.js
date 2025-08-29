@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import SoundMeter from "./SoundMeter";
 
-// Theme and image URLs
 const theme = {
   orange: "#ff7000",
   white: "#fff",
@@ -10,6 +9,7 @@ const theme = {
   inputBorder: "#ffb066",
   buttonHover: "#ffa540"
 };
+
 const PROFILE_URL = "https://resume-worker.dan-creed.workers.dev/profile.jpg";
 const GOON_URL = "https://images.credly.com/images/9a698c36-3b13-48b4-a3bf-8a070d5000a6/image.png";
 
@@ -30,7 +30,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [voiceActive, setVoiceActive] = useState(false);
-
   const {
     transcript,
     listening,
@@ -47,7 +46,6 @@ export default function App() {
     // eslint-disable-next-line
   }, [listening]);
 
-  // Speak each answer out loud as it's set
   useEffect(() => {
     if (answer) speak(answer);
   }, [answer]);
@@ -150,7 +148,6 @@ export default function App() {
             fontSize: "2em",
             marginBlock: 0,
           }}>
-            {/* Updated Heading */}
             Daniel Creed Q&amp;A ChatBot
           </h2>
         </div>
@@ -167,7 +164,13 @@ export default function App() {
         />
       </div>
       {/* --- Input and Voice --- */}
-      <form onSubmit={handleAsk} style={{ margin: "2em 0 1.5em 0", width: "100%", display: "flex", gap: "1em", justifyContent: "center" }}>
+      <form onSubmit={handleAsk} style={{
+        margin: "2em 0 1.5em 0",
+        width: "100%",
+        display: "flex",
+        gap: "1em",
+        justifyContent: "center"
+      }}>
         <input
           required
           value={question}
@@ -202,7 +205,7 @@ export default function App() {
         </button>
       </form>
       {browserSupportsSpeechRecognition && (
-        <div style={{ marginBottom: "1em", width: "100%" }}>
+        <div style={{ marginBottom: "1em", width: "100%", textAlign: "center" }}>
           {!voiceActive ? (
             <button
               type="button"
@@ -244,7 +247,7 @@ export default function App() {
               ⏹ Stop Conversation
             </button>
           )}
-          {voiceActive && <SoundMeter listening={listening} />}
+          <SoundMeter listening={listening && voiceActive} />
           {voiceActive && (
             <div style={{ color: theme.orange, marginTop: "0.5em", fontWeight: 700 }}>
               {listening ? "Listening…" : transcript ? "Recognized: " + transcript : ""}
