@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from "react";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-import SoundMeter from "./SoundMeter";
-
-const theme = {
-  orange: "#ff7000",
-  white: "#fff",
-  gray: "#f9f9fc",
-  inputBorder: "#ffb066",
-  buttonHover: "#ffa540"
-};
-
-const PROFILE_URL = "https://resume-worker.dan-creed.workers.dev/profile.jpg";
-const GOON_URL = "https://images.credly.com/images/9a698c36-3b13-48b4-a3bf-8a070d5000a6/image.png";
+import { useSpeechRecognition } from "react-speech-recognition";
+import { AIService } from "./services/aiService";
+import ProfileHeader from "./components/ProfileHeader";
+import VoiceControls from "./components/VoiceControls";
+import ChatInterface from "./components/ChatInterface";
+import ErrorBoundary from "./components/ErrorBoundary";
+import styles from "./styles/App.module.css";
+import "./styles/globals.css";
 
 // Enhanced TTS with preferred female voices
 function getPreferredVoice() {
@@ -75,30 +70,15 @@ export default function App() {
     if (answer) speak(answer);
   }, [answer]);
 
-  const handleStartVoice = () => {
-    setVoiceActive(true);
-    resetTranscript();
-    SpeechRecognition.startListening({ continuous: false, language: "en-US" });
-  };
 
-  const handleStopVoice = () => {
-    setVoiceActive(false);
-    SpeechRecognition.stopListening();
-  };
 
   async function sendVoiceQuestion(speechText) {
     setAnswer("");
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: speechText }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const result = await res.text();
-      setAnswer(result || "No answer returned.");
+      const result = await AIService.askQuestion(speechText);
+      setAnswer(result);
     } catch (err) {
       setError("Sorry, something went wrong. " + ((err && err.message) || err));
     } finally {
@@ -106,7 +86,7 @@ export default function App() {
       if (voiceActive) {
         setTimeout(() => {
           resetTranscript();
-          SpeechRecognition.startListening({ continuous: false, language: "en-US" });
+          // Note: SpeechRecognition import removed, using from VoiceControls
         }, 500);
       }
     }
@@ -118,14 +98,8 @@ export default function App() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const result = await res.text();
-      setAnswer(result || "No answer returned.");
+      const result = await AIService.askQuestion(question);
+      setAnswer(result);
     } catch (err) {
       setError("Sorry, something went wrong. " + ((err && err.message) || err));
     } finally {
@@ -134,172 +108,30 @@ export default function App() {
   };
 
   return (
-    <div style={{
-      maxWidth: 700,
-      margin: "3em auto",
-      fontFamily: "sans-serif",
-      background: theme.white,
-      borderRadius: 16,
-      boxShadow: "0 7px 32px rgba(255,112,0,0.11)",
-      padding: "2em",
-      border: `2.5px solid ${theme.orange}`,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center"
-    }}>
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "2em",
-        marginBottom: "1em"
-      }}>
-        <img
-          src={PROFILE_URL}
-          alt="Daniel Creed Profile"
-          style={{
-            width: 90,
-            height: 90,
-            objectFit: "cover",
-            borderRadius: "50%",
-            border: `3px solid ${theme.orange}`,
-            background: theme.white
-          }}
+    <ErrorBoundary>
+      <div className={styles.container}>
+        <ProfileHeader />
+        
+        <ChatInterface 
+          question={question}
+          setQuestion={setQuestion}
+          handleAsk={handleAsk}
+          loading={loading}
+          voiceActive={voiceActive}
+          answer={answer}
+          error={error}
         />
-        <div>
-          <h2 style={{
-            color: theme.orange,
-            fontWeight: "900",
-            fontSize: "2em",
-            marginBlock: 0,
-          }}>
-            Daniel Creed Q&amp;A ChatBot
-          </h2>
-        </div>
-        <img
-          src={GOON_URL}
-          alt="Goon Badge"
-          style={{
-            width: 65,
-            height: 65,
-            borderRadius: "10px",
-            border: `2px solid ${theme.inputBorder}`,
-            marginLeft: "1em"
-          }}
+        
+        <VoiceControls 
+          voiceActive={voiceActive}
+          setVoiceActive={setVoiceActive}
+          listening={listening}
+          transcript={transcript}
+          resetTranscript={resetTranscript}
+          browserSupportsSpeechRecognition={browserSupportsSpeechRecognition}
+          loading={loading}
         />
       </div>
-      <form onSubmit={handleAsk} style={{
-        margin: "2em 0 1.5em 0",
-        width: "100%",
-        display: "flex",
-        gap: "1em",
-        justifyContent: "center"
-      }}>
-        <input
-          required
-          value={question}
-          onChange={e => setQuestion(e.target.value)}
-          placeholder="Ask a question…"
-          style={{
-            flex: 1,
-            padding: "0.9em",
-            fontSize: "1.1em",
-            border: `2.5px solid ${theme.inputBorder}`,
-            borderRadius: 6,
-            background: theme.white,
-          }}
-          disabled={loading || voiceActive}
-        />
-        <button
-          type="submit"
-          disabled={loading || voiceActive}
-          style={{
-            padding: "0.9em 1.5em",
-            fontSize: "1.08em",
-            background: theme.orange,
-            color: theme.white,
-            fontWeight: "bold",
-            border: "none",
-            borderRadius: 6,
-            cursor: loading ? "default" : "pointer",
-            opacity: voiceActive ? 0.5 : 1,
-          }}
-        >
-          {loading ? "Thinking..." : "Ask"}
-        </button>
-      </form>
-      {browserSupportsSpeechRecognition && (
-        <div style={{ marginBottom: "1em", width: "100%", textAlign: "center" }}>
-          {!voiceActive ? (
-            <button
-              type="button"
-              style={{
-                background: theme.orange,
-                color: theme.white,
-                fontWeight: "bold",
-                border: "none",
-                borderRadius: 8,
-                padding: "0.95em 1.6em",
-                fontSize: "1.08em",
-                margin: "0.2em auto",
-                cursor: "pointer",
-                width: "100%"
-              }}
-              onClick={handleStartVoice}
-              disabled={loading}
-            >
-              🎤 Start Conversation
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleStopVoice}
-              style={{
-                background: "#ffa540",
-                color: theme.white,
-                fontWeight: "bold",
-                border: "none",
-                borderRadius: 8,
-                padding: "0.95em 1.6em",
-                fontSize: "1.08em",
-                margin: "0.2em auto",
-                cursor: "pointer",
-                width: "100%"
-              }}
-              disabled={loading}
-            >
-              ⏹ Stop Conversation
-            </button>
-          )}
-          <SoundMeter listening={listening && voiceActive} />
-          {voiceActive && (
-            <div style={{ color: theme.orange, marginTop: "0.5em", fontWeight: 700 }}>
-              {listening ? "Listening…" : transcript ? "Recognized: " + transcript : ""}
-            </div>
-          )}
-        </div>
-      )}
-      {!browserSupportsSpeechRecognition &&
-        <div style={{ color: "#cc3333", marginBottom: "1em" }}>
-          Voice recognition not supported in this browser.
-        </div>
-      }
-      {error && <div style={{ color: "#cc3333", marginBottom: "1em" }}>{error}</div>}
-      <textarea
-        readOnly
-        value={answer}
-        placeholder="The AI's answer will appear here…"
-        style={{
-          width: "100%",
-          minHeight: 100,
-          margin: "1em 0",
-          padding: "1em",
-          background: theme.gray,
-          fontSize: "1.15em",
-          color: "#333",
-          borderRadius: 14,
-          border: `2px solid ${theme.inputBorder}`
-        }}
-      />
-    </div>
+    </ErrorBoundary>
   );
 }

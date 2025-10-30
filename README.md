@@ -1,6 +1,15 @@
-# Getting Started with Create React App
+# Daniel Creed - AI Resume Chatbot
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An interactive React application that allows users to ask questions about Daniel Creed's professional background using both text and voice input. The chatbot provides intelligent responses about experience, skills, and career information.
+
+## Features
+
+- 🤖 **AI-Powered Responses**: Get intelligent answers about Daniel's professional background
+- 🎤 **Voice Recognition**: Ask questions using speech-to-text functionality
+- 🔊 **Text-to-Speech**: Hear responses read aloud automatically
+- 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🎨 **Modern UI**: Clean, professional interface with Cloudflare branding
+- 🛡️ **Error Handling**: Robust error boundaries and user feedback
 
 ## Available Scripts
 
@@ -17,54 +26,115 @@ You may also see any lint errors in the console.
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Includes tests for component rendering and functionality.
 
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The build is optimized for best performance with minified files and hashed filenames.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### `npm run lint`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Runs ESLint to check for code quality issues and potential bugs.
 
-### `npm run eject`
+### `npm run format`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Formats code using Prettier for consistent styling.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Project Structure
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
+src/
+├── components/           # Reusable UI components
+│   ├── ProfileHeader.js  # Header with profile image and title
+│   ├── VoiceControls.js  # Speech recognition controls
+│   ├── ChatInterface.js  # Text input and response display
+│   └── ErrorBoundary.js  # Error handling component
+├── services/            # Business logic and API calls
+│   └── aiService.js     # AI chatbot API integration
+├── styles/              # Styling and theming
+│   └── theme.js         # Color scheme and constants
+├── SoundMeter.js        # Audio visualization component
+└── App.js               # Main application component
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Environment Configuration
 
-## Learn More
+The application supports environment variables for customization:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```env
+REACT_APP_API_URL=/ask
+REACT_APP_PROFILE_IMAGE_URL=https://resume-worker.dan-creed.workers.dev/profile.jpg
+REACT_APP_BADGE_IMAGE_URL=https://images.credly.com/images/...
+REACT_APP_SPEECH_LANGUAGE=en-US
+REACT_APP_PRIMARY_COLOR=#ff7000
+REACT_APP_SECONDARY_COLOR=#ffb066
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Technology Stack
 
-### Code Splitting
+- **React 19.1.1** - Modern React with hooks and functional components
+- **React Speech Recognition** - Browser-based speech-to-text functionality
+- **Web Speech API** - Text-to-speech for audio responses
+- **Cloudflare Workers** - Backend API for AI responses
+- **Canvas API** - Audio visualization for voice input
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Browser Compatibility
 
-### Analyzing the Bundle Size
+- **Voice Recognition**: Chrome, Edge, Safari (latest versions)
+- **Text-to-Speech**: All modern browsers
+- **Core Functionality**: All modern browsers (IE11+ with polyfills)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Development
 
-### Making a Progressive Web App
+### Prerequisites
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- Node.js 16+ 
+- npm or yarn
 
-### Advanced Configuration
+### Installation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```bash
+git clone https://github.com/dancreed/resume-ui.git
+cd resume-ui
+npm install
+npm start
+```
 
-### Deployment
+### Testing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+npm test                    # Run tests in watch mode
+npm test -- --coverage     # Run with coverage report
+```
 
-### `npm run build` fails to minify
+### Building for Production
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm run build              # Create production build
+npm run build -- --analyze # Analyze bundle size
+```
+
+## Deployment
+
+The application is designed to work with:
+- **Cloudflare Pages** (recommended)
+- **Netlify**
+- **Vercel** 
+- Any static hosting provider
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is private and proprietary to Daniel Creed.
+
+## Contact
+
+Daniel Creed - [GitHub](https://github.com/dancreed)
