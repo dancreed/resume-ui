@@ -1,9 +1,12 @@
 export const theme = {
-  orange: process.env.REACT_APP_PRIMARY_COLOR || "#ff7000",
+  // Allison Transmission Red
+  orange: process.env.REACT_APP_PRIMARY_COLOR || "#E31837",
   white: "#fff",
-  gray: "#f9f9fc",
-  inputBorder: process.env.REACT_APP_SECONDARY_COLOR || "#ffb066",
-  buttonHover: "#ffa540"
+  gray: "#f0f2f5", // Slight off-white/gray for backgrounds
+  inputBorder: process.env.REACT_APP_SECONDARY_COLOR || "#004B87", // Allison Blue
+  buttonHover: "#C4122D", // Darker red for hover
+  // You can add specific blue if needed elsewhere
+  blue: "#003366",
 };
 
 export const urls = {
